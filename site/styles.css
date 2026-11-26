@@ -89,6 +89,8 @@ body::before {
 /* ---------- Header ---------- */
 
 .top {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -470,6 +472,8 @@ h1 em,
 }
 
 .input-wrap:focus-within {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   border-color: rgba(103, 232, 249, 0.55);
   background: var(--card-strong);
   box-shadow:
@@ -501,6 +505,36 @@ h1 em,
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   padding: 0;
+}
+
+.sign-toggle {
+  display: none;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sign-toggle:active {
+  background: rgba(103, 232, 249, 0.12);
+  color: var(--text);
+}
+
+@media (pointer: coarse) {
+  .sign-toggle {
+    display: inline-flex;
+  }
 }
 
 #guess::placeholder {
@@ -543,7 +577,7 @@ h1 em,
 }
 
 .button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
 }
 
 .button.primary:focus-visible {
@@ -871,7 +905,8 @@ h1 em,
   }
 
   .chart {
-    height: clamp(230px, 62vw, 420px);
+    height: clamp(180px, min(62vw, 100vh - 160px), 420px);
+    height: clamp(180px, min(62vw, 100svh - 160px), 420px);
   }
 
   .result-panel {

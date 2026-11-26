@@ -42,8 +42,11 @@ export function tween(duration, onUpdate) {
     finished = true;
     if (frame !== null) cancelAnimationFrame(frame);
     frame = null;
-    onUpdate(1);
-    resolveDone();
+    try {
+      onUpdate(1);
+    } finally {
+      resolveDone(); // never leave the game waiting on a broken frame
+    }
   };
 
   if (duration <= 0 || prefersReducedMotion()) {

@@ -13,6 +13,7 @@ const RESCALE_MS = 650;
 const PADDING_SHARE = 0.08; // empty space above and below the line
 const MAX_ZOOM_OUT = 3; // the reveal may grow the y-range to at most 3x
 const TICK_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+const LABEL_GAP = 15; // minimum space between the answer and guess labels
 
 // When each part of the reveal plays, in ms. Everything after the optional
 // rescale waits for it to finish.
@@ -24,6 +25,7 @@ function revealTimeline(rescaleMs) {
     bar: [r + 150, r + 1050],
     drift: [r + 150, r + 850],
     guess: [r + 600, r + 1200],
+    guessLabel: [r + 950, r + 1300],
     error: [r + 1050, r + 1450],
     total: r + 1450,
   };
@@ -398,29 +400,13 @@ export class Chart {
     const guessY = Math.min(Math.max(rawGuessY, b.top + 4), b.bottom - 4);
     const markerY = lerp(y0, guessY, guessIn);
 
-    // Value labels beside the ruler, pushed apart if they would overlap.
-    const labelGap = 15;
-    let actualLabelY = barY;
-    let guessLabelY = markerY;
-    if (guessIn > 0 && Math.abs(actualLabelY - guessLabelY) < labelGap) {
-      const middle = (actualLabelY + guessLabelY) / 2;
-      const direction = guessLabelY > actualLabelY || (guessLabelY === actualLabelY && guess < t) ? 1 : -1;
-      actualLabelY = middle - (direction * labelGap) / 2;
-      guessLabelY = middle + (direction * labelGap) / 2;
-    }
-    const labelTop = b.top + 6;
-    const labelBottom = b.bottom - 6;
-    const clampLabel = (y) => Math.min(Math.max(y, labelTop), labelBottom);
-    actualLabelY = clampLabel(actualLabelY);
-    guessLabelY = clampLabel(guessLabelY);
-    if (guessIn > 0 && Math.abs(actualLabelY - guessLabelY) < labelGap) {
-      // Clamping at an edge pushed them together again: move the other one.
-      if (actualLabelY === labelTop || actualLabelY === labelBottom) {
-        guessLabelY = actualLabelY + (actualLabelY === labelTop ? labelGap : -labelGap);
-      } else {
-        actualLabelY = guessLabelY + (guessLabelY === labelTop ? labelGap : -labelGap);
-      }
-    }
+    // Value labels beside the ruler. Their spots come from the final values
+    // (pushed apart if close), so they never swap places mid-animation. The
+    // answer's label rises with the bar; the guess label fades in at its spot.
+    const labels = this.labelPositions(yEnd, guessY, guess <= t);
+    const actualLabelY = lerp(y0, labels.actual, bar);
+    const guessLabelY = labels.guess;
+    const guessLabelIn = phase(timeline.guessLabel, elapsed);
 
     // Ruler ticks: one per standard error, thinned out when they get tight.
     const pxPerUnit = (unit * b.plotHeight) / (this.view.max - this.view.min);
@@ -444,7 +430,7 @@ export class Chart {
         unitLines += `<line class="unit-line" x1="${b.left}" x2="${b.right}" y1="${ys}" y2="${ys}"/>`;
       }
       const nearActual = bar > 0 && Math.abs(y - actualLabelY) < 12;
-      const nearGuess = guessIn > 0 && Math.abs(y - guessLabelY) < 12;
+      const nearGuess = guessLabelIn > 0 && Math.abs(y - guessLabelY) < 12;
       if (labeled && !nearActual && !nearGuess) {
         tickLabels += `<text class="tick-label${passed ? ' is-passed' : ''}" x="${fixed(x + 10)}" y="${ys}">${k}</text>`;
       }
@@ -482,12 +468,37 @@ export class Chart {
         const back = tip - guessOffChart * 5;
         markup += `<path class="guess-arrow" d="M${x - 4} ${fixed(back)}L${x} ${fixed(tip)}L${x + 4} ${fixed(back)}"/>`;
       }
-      markup += `<text class="value-label is-guess" x="${fixed(x + 10)}" y="${fixed(guessLabelY)}">${formatCompact(guess)}</text>`;
       markup += '</g>';
+    }
+    if (guessLabelIn > 0) {
+      markup += `<text class="value-label is-guess" opacity="${guessLabelIn}" x="${fixed(x + 10)}" y="${fixed(guessLabelY)}">${formatCompact(guess)}</text>`;
     }
 
     this.revealLayer.innerHTML = markup;
     this.grid.style.opacity = String(1 - 0.7 * track);
+  }
+
+  // Final y positions for the answer and guess labels: at least LABEL_GAP
+  // apart, in value order (lower value lower on screen), inside the plot.
+  labelPositions(actualY, guessY, guessBelow) {
+    const top = this.box.top + 6;
+    const bottom = this.box.bottom - 6;
+    let upper = guessBelow ? actualY : guessY;
+    let lower = guessBelow ? guessY : actualY;
+    if (lower - upper < LABEL_GAP) {
+      const middle = (upper + lower) / 2;
+      upper = middle - LABEL_GAP / 2;
+      lower = middle + LABEL_GAP / 2;
+    }
+    if (upper < top) {
+      upper = top;
+      lower = Math.max(lower, top + LABEL_GAP);
+    }
+    if (lower > bottom) {
+      lower = bottom;
+      upper = Math.min(upper, bottom - LABEL_GAP);
+    }
+    return guessBelow ? { actual: upper, guess: lower } : { actual: lower, guess: upper };
   }
 
   // The y-range to show on reveal: big enough to include the guess and one

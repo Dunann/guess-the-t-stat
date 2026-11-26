@@ -15,6 +15,7 @@ const ui = {
   form: $('guess-form'),
   inputWrap: $('input-wrap'),
   input: $('guess'),
+  signToggle: $('sign-toggle'),
   hint: $('hint'),
   result: $('result'),
   answer: $('answer'),
@@ -40,6 +41,14 @@ let round = null;
 let stats = loadStats();
 let averageAnimation = null;
 let resetTimer = null;
+let shakeTimer = null;
+// Times (ms) used to ignore accidental double clicks and taps.
+let revealStartedAt = 0;
+let revealSkippedAt = 0;
+
+// A second press this soon after a reveal starts or is skipped is treated as
+// part of the same double click or tap, not as a new action.
+const DOUBLE_PRESS_MS = 400;
 
 const chart = new Chart(ui.chart);
 const seeds = createRng(initialSeed());
@@ -76,6 +85,7 @@ function submitGuess(event) {
   }
 
   state = 'revealing';
+  revealStartedAt = performance.now();
   const previousAverage = averageError(stats);
   const result = applyRound(stats, round.t, guess);
   stats = result.stats;
@@ -108,8 +118,14 @@ function submitGuess(event) {
 
 // Enter or the Next button: skip the reveal animation, or go to the next round.
 function advance() {
-  if (state === 'revealing') chart.finishReveal();
-  else if (state === 'revealed') startRound();
+  const now = performance.now();
+  if (now - revealStartedAt < DOUBLE_PRESS_MS) return;
+  if (state === 'revealing') {
+    revealSkippedAt = now;
+    chart.finishReveal();
+  } else if (state === 'revealed' && now - revealSkippedAt >= DOUBLE_PRESS_MS) {
+    startRound();
+  }
 }
 
 // ---- Panels ----
@@ -117,6 +133,7 @@ function advance() {
 function showGuessPanel() {
   ui.input.value = '';
   setHint('');
+  stopShake();
   ui.form.inert = false;
   ui.panel.classList.remove('is-result');
   ui.result.classList.remove('is-scored');
@@ -150,6 +167,25 @@ function rejectInput() {
   const empty = ui.input.value.trim() === '';
   setHint(empty ? 'Type your guess first, like 2.4' : 'Enter a number, like 2.4');
   restartAnimation(ui.inputWrap, 'is-shaking');
+  // Removed on a timer, not on animationend, which never fires when
+  // animations are turned off (reduced motion).
+  clearTimeout(shakeTimer);
+  shakeTimer = setTimeout(stopShake, 450);
+  ui.input.focus();
+}
+
+function stopShake() {
+  clearTimeout(shakeTimer);
+  ui.inputWrap.classList.remove('is-shaking');
+}
+
+// Touch keypads for decimals often have no minus key, so a button flips the sign.
+function toggleSign() {
+  const value = ui.input.value.trim();
+  if (/^[-\u2212]/.test(value)) ui.input.value = value.slice(1);
+  else if (value.startsWith('+')) ui.input.value = `-${value.slice(1)}`;
+  else ui.input.value = `-${value}`;
+  setHint('');
   ui.input.focus();
 }
 
@@ -224,6 +260,8 @@ function handleReset() {
 // ---- Keyboard ----
 
 function handleKeydown(event) {
+  // Some autofill tools send keydown events without a key.
+  if (typeof event.key !== 'string') return;
   if (event.key === 'Enter') {
     // Holding Enter must not skip through results.
     if (event.repeat) {
@@ -250,8 +288,13 @@ function handleKeydown(event) {
 // ---- Start ----
 
 ui.form.addEventListener('submit', submitGuess);
-ui.input.addEventListener('input', () => setHint(''));
-ui.inputWrap.addEventListener('animationend', () => ui.inputWrap.classList.remove('is-shaking'));
+ui.input.addEventListener('input', () => {
+  setHint('');
+  stopShake();
+});
+// Keep the input focused (and a phone keyboard open) when the sign button is pressed.
+ui.signToggle?.addEventListener('pointerdown', (event) => event.preventDefault());
+ui.signToggle?.addEventListener('click', toggleSign);
 ui.next.addEventListener('click', advance);
 ui.reset.addEventListener('click', handleReset);
 document.addEventListener('keydown', handleKeydown);

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Guess the t-stat</title>
   <meta name="description" content="Each chart is the cumulative return of a simulated trading strategy. Guess the t-stat of its returns.">
   <meta name="theme-color" content="#06080f">
@@ -33,7 +33,7 @@
         <h1>guess the <em>t</em>&#8209;stat</h1>
       </div>
 
-      <div class="stats" aria-label="Your stats">
+      <div class="stats" role="group" aria-label="Your stats">
         <div class="stat">
           <span class="stat-label">Rounds</span>
           <span class="stat-value" id="rounds">0</span>
@@ -61,6 +61,7 @@
               placeholder="0.00" maxlength="8" autocomplete="off" autocorrect="off"
               autocapitalize="off" spellcheck="false" aria-label="Your guess for the t-stat"
               aria-describedby="hint">
+            <button class="sign-toggle" id="sign-toggle" type="button" aria-label="Switch between positive and negative">&plusmn;</button>
           </label>
           <button class="button primary" type="submit">
             Guess
