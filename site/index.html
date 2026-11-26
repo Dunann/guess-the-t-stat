@@ -2,10 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Guess the t-stat</title>
+  <meta name="description" content="Each chart is the cumulative return of a simulated trading strategy. Guess the t-stat of its returns.">
+  <meta name="theme-color" content="#06080f">
+  <meta property="og:title" content="Guess the t-stat">
+  <meta property="og:description" content="Each chart is the cumulative return of a simulated trading strategy. Guess the t-stat of its returns.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/main.js"></script>
 </head>
-<body style="background:#070a12;color:#e6e9f2;font-family:system-ui,sans-serif">
-  <p>Guess the t-stat is on its way.</p>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+          <defs>
+            <linearGradient id="logo-line" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stop-color="#22d3ee"/>
+              <stop offset="1" stop-color="#c084fc"/>
+            </linearGradient>
+          </defs>
+          <rect x="1" y="1" width="30" height="30" rx="9" fill="#0d1222" stroke="rgba(255,255,255,0.1)"/>
+          <path d="M6 22.5 L10 19 L13 20.5 L17 14.5 L20 16 L26 9" fill="none" stroke="url(#logo-line)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="26" cy="9" r="2.2" fill="#fff"/>
+        </svg>
+        <h1>guess the <em>t</em>&#8209;stat</h1>
+      </div>
+
+      <div class="stats" aria-label="Your stats">
+        <div class="stat">
+          <span class="stat-label">Rounds</span>
+          <span class="stat-value" id="rounds">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Avg distance</span>
+          <span class="stat-value" id="average">&mdash;</span>
+        </div>
+        <ol class="dots" id="dots" aria-label="Recent rounds"></ol>
+      </div>
+    </header>
+
+    <p class="tagline">Each chart is the cumulative return of a simulated trading strategy. Guess the t&#8209;stat of its returns.</p>
+
+    <section class="chart-card" aria-label="Chart">
+      <div class="chart" id="chart"></div>
+    </section>
+
+    <section class="panel" id="panel">
+      <form class="guess-panel" id="guess-form" autocomplete="off" novalidate>
+        <div class="input-row">
+          <label class="input-wrap" id="input-wrap">
+            <span class="prefix" aria-hidden="true"><em>t</em> =</span>
+            <input id="guess" name="guess" type="text" inputmode="decimal" enterkeyhint="go"
+              placeholder="0.00" maxlength="8" autocomplete="off" autocorrect="off"
+              autocapitalize="off" spellcheck="false" aria-label="Your guess for the t-stat"
+              aria-describedby="hint">
+          </label>
+          <button class="button primary" type="submit">
+            Guess
+            <svg class="enter-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M13 3.5v4.25a2 2 0 0 1-2 2H3.5M6.5 6.5l-3 3.25 3 3.25" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="hint" id="hint" aria-live="polite"></p>
+      </form>
+
+      <div class="result-panel" id="result" inert>
+        <div class="answer">
+          <span class="caption">t&#8209;stat</span>
+          <span class="answer-value" id="answer">0.00</span>
+        </div>
+        <div class="details">
+          <div class="detail">
+            <span class="caption">Your guess</span>
+            <span class="detail-value is-guess" id="your-guess"></span>
+          </div>
+          <div class="detail score" id="score">
+            <span class="caption">Off by</span>
+            <span class="detail-value">
+              <span id="off-by"></span>
+              <span class="grade" id="grade"></span>
+            </span>
+          </div>
+        </div>
+        <button class="button secondary" id="next" type="button">
+          Next round
+          <svg class="arrow-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="visually-hidden" id="announcer" aria-live="polite"></p>
+    </section>
+
+    <footer class="footer">
+      <details class="explainer">
+        <summary>What's a t&#8209;stat?</summary>
+        <div class="explainer-body">
+          <p>The t&#8209;stat compares a strategy's average return with how noisy its returns are: <span class="formula">t = mean &divide; (standard deviation &divide; &radic;n)</span>, where n is the number of returns.</p>
+          <p>On the chart, that is how far the line ends above zero, measured in units of standard deviation &times; &radic;n, which is how far luck alone typically carries a strategy that makes nothing. The scale shown on reveal counts these units.</p>
+          <p>As a rule of thumb, a t&#8209;stat above about 2 is unlikely to come from luck alone.</p>
+        </div>
+      </details>
+      <button class="text-button" id="reset" type="button">Reset stats</button>
+    </footer>
+  </main>
+
+  <noscript><p class="noscript">This game needs JavaScript to run.</p></noscript>
 </body>
 </html>

@@ -7,13 +7,17 @@ export const RECENT_LIMIT = 20;
 
 // Turns the player's text into a number, or null if it isn't one.
 // Accepts "2.5", "2,5", ".5", "-0.3", "+1" and a typographic minus sign.
+// The result is rounded to 2 decimals, the precision of the answers, so the
+// guess, the answer and the distance shown always agree.
 export function parseGuess(text) {
   const cleaned = String(text)
     .trim()
     .replace(/−/g, '-')
     .replace(',', '.');
   if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(cleaned)) return null;
-  const value = Number(cleaned);
+  // Shift the decimal point in the text itself to round exactly
+  // ("2.345" becomes 234.5, not 234.49999999999997).
+  const value = Math.round(Number(`${cleaned}e2`)) / 100;
   if (!Number.isFinite(value) || Math.abs(value) > MAX_GUESS) return null;
   return value === 0 ? 0 : value;
 }
@@ -94,10 +98,7 @@ export function format2(x) {
   return rounded.toFixed(2);
 }
 
-// Shorter format for tight spaces (chart labels): fewer decimals for big values.
+// Format for tight spaces (chart labels): whole numbers from 100 up.
 export function formatCompact(x) {
-  const size = Math.abs(x);
-  if (size >= 100) return String(Math.round(x));
-  if (size >= 10) return (Math.round(x * 10) / 10 || 0).toFixed(1);
-  return format2(x);
+  return Math.abs(x) >= 100 ? String(Math.round(x)) : format2(x);
 }

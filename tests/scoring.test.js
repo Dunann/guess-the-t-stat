@@ -25,6 +25,14 @@ test('parseGuess accepts common number formats', () => {
   assert.equal(parseGuess('  4  '), 4);
   assert.equal(parseGuess('1000'), 1000);
   assert.ok(Object.is(parseGuess('-0'), 0));
+  assert.ok(Object.is(parseGuess('-0.001'), 0));
+});
+
+test('parseGuess rounds to 2 decimals exactly', () => {
+  assert.equal(parseGuess('2.345'), 2.35);
+  assert.equal(parseGuess('1.005'), 1.01);
+  assert.equal(parseGuess('0.125'), 0.13);
+  assert.equal(parseGuess('3.14159'), 3.14);
 });
 
 test('parseGuess rejects anything else', () => {
@@ -96,7 +104,8 @@ test('number formatting', () => {
   assert.equal(format2(-0.001), '0.00');
   assert.equal(format2(3.456), '3.46');
   assert.equal(formatCompact(3.456), '3.46');
-  assert.equal(formatCompact(12.34), '12.3');
+  assert.equal(formatCompact(12.34), '12.34');
+  assert.equal(formatCompact(99.994), '99.99');
   assert.equal(formatCompact(-250.6), '-251');
 });
 
