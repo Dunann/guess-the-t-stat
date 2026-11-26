@@ -7,6 +7,5 @@
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
     "start": "python -m http.server 8000 --directory site"
-  },
-  "license": "MIT"
+  }
 }

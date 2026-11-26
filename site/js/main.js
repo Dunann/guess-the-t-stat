@@ -3,7 +3,7 @@
 import { createRng, randomInt32 } from './random.js';
 import { makeRound } from './series.js';
 import { parseGuess, applyRound, averageError, emptyStats, grade, format2 } from './scoring.js';
-import { loadStats, saveStats, clearStats } from './storage.js';
+import { loadStats, saveStats, clearStats, STORAGE_KEY } from './storage.js';
 import { Chart } from './chart.js';
 import { tween, ease } from './anim.js';
 
@@ -255,6 +255,13 @@ ui.inputWrap.addEventListener('animationend', () => ui.inputWrap.classList.remov
 ui.next.addEventListener('click', advance);
 ui.reset.addEventListener('click', handleReset);
 document.addEventListener('keydown', handleKeydown);
+
+// Keep stats in step when the game is open in more than one tab.
+window.addEventListener('storage', (event) => {
+  if (event.key !== null && event.key !== STORAGE_KEY) return;
+  stats = loadStats();
+  renderStats();
+});
 
 renderStats();
 startRound();

@@ -39,6 +39,7 @@
 }
 
 html {
+  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -142,6 +143,7 @@ h1 em,
 }
 
 .stat-label {
+  white-space: nowrap;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -899,6 +901,75 @@ h1 em,
   }
 }
 
+/* Narrow phones: the stats bar spans the width and shows as many recent
+   dots as fit, newest on the right, oldest fading out on the left. */
+@media (max-width: 560px) {
+  .stats {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .dots {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+    overflow: hidden;
+    border-left: 0;
+    padding: 4px 2px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px);
+    mask-image: linear-gradient(to right, transparent 0, #000 28px);
+  }
+
+  .dot {
+    flex: none;
+  }
+
+  .dot::after {
+    display: none;
+  }
+}
+
+/* Small phones: answer on the left, guess and distance stacked on the right. */
+@media (max-width: 460px) {
+  .result-panel {
+    gap: 12px 18px;
+  }
+
+  .answer-value {
+    font-size: 36px;
+  }
+
+  .details {
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 16px;
+  }
+
+  .detail {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .detail .caption {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .detail-value {
+    margin-top: 0;
+    font-size: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .grade {
+    transform: none;
+    font-size: 11px;
+    padding: 1px 8px 1px 6px;
+  }
+}
+
 @media (max-width: 420px) {
   .stat-label {
     font-size: 10px;
@@ -921,11 +992,6 @@ h1 em,
 
   .button {
     padding: 0 18px;
-  }
-
-  .details {
-    border-left: 0;
-    padding-left: 0;
   }
 }
 
